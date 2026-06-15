@@ -71,7 +71,7 @@
 </style>
 </head>
 <body>
-  <img src="/assets/botlogo.jpg" alt="SwiftBot" style="width:140px;height:140px;border-radius:20px;margin-bottom:10px;">
+  <img src="/botlogo.jpg" alt="SwiftBot" style="width:140px;height:140px;border-radius:20px;margin-bottom:10px;">
   <h1>SwiftBot</h1>
   <p>Connect your WhatsApp account</p>
 
@@ -93,6 +93,7 @@
     </div>
 
     <p class="session-id" id="sessionIdDisplay"></p>
+    <button onclick="startNewSession()" style="margin-top:15px;background:#21262d;">Pair Another Device</button>
   </div>
 
 <script>
@@ -167,7 +168,15 @@ async function requestCode() {
 }
 
 initSession();
+
+function startNewSession() {
+  localStorage.removeItem('swiftbot_session_id');
+  sessionId = null;
+  document.getElementById('codeResult').innerHTML = '';
+  document.getElementById('sessionIdDisplay').textContent = '';
+  document.getElementById('qrcode').innerHTML = 'Starting new session...';
+  initSession();
+}
 </script>
 </body>
 </html>
-
