@@ -5,178 +5,273 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SwiftBot Pairing</title>
 <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: Arial, sans-serif;
     background: #0d1117;
     color: #f0f6fc;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    margin: 0;
     padding: 20px;
     text-align: center;
   }
-  h1 { margin-bottom: 5px; }
+  .logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    object-fit: cover;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  p.subtitle { color: #8b949e; margin-bottom: 20px; font-size: 14px; }
   .card {
     background: #161b22;
     border: 1px solid #30363d;
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 24px;
-    max-width: 400px;
     width: 100%;
-    margin-top: 20px;
+    max-width: 380px;
   }
-  #qrcode img { max-width: 100%; border-radius: 8px; }
-  input, button {
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #30363d;
-    margin-top: 10px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  input { background: #0d1117; color: #f0f6fc; }
-  button {
-    background: #238636;
-    color: white;
-    cursor: pointer;
-    border: none;
-  }
-  button:hover { background: #2ea043; }
-  .code-display {
-    font-size: 28px;
-    letter-spacing: 4px;
-    font-weight: bold;
-    margin-top: 15px;
-    padding: 12px;
-    background: #0d1117;
-    border-radius: 8px;
-    border: 1px solid #30363d;
-  }
-  .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
   .tab {
     flex: 1;
     padding: 10px;
-    background: #21262d;
     border-radius: 8px;
+    background: #21262d;
+    color: #f0f6fc;
     cursor: pointer;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
   }
   .tab.active { background: #238636; }
-  .status { margin-top: 10px; font-size: 14px; color: #8b949e; }
-  .session-id { font-size: 13px; color: #58a6ff; margin-top: 8px; word-break: break-all; }
-  .hidden { display: none; }
+  .section { display: none; }
+  .section.active { display: block; }
+  #qrBox {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #qrBox img { width: 200px; height: 200px; border-radius: 8px; }
+  .status-text { color: #8b949e; font-size: 13px; margin-top: 8px; }
+  .input-group { display: flex; flex-direction: column; gap: 10px; }
+  input[type="text"] {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #0d1117;
+    color: #f0f6fc;
+    font-size: 15px;
+    width: 100%;
+  }
+  input[type="text"]:focus { outline: none; border-color: #238636; }
+  .btn {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-green { background: #238636; color: white; }
+  .btn-green:hover { background: #2ea043; }
+  .btn-gray { background: #21262d; color: #f0f6fc; margin-top: 14px; }
+  .btn-gray:hover { background: #30363d; }
+  .pair-code {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    padding: 14px;
+    background: #0d1117;
+    border-radius: 8px;
+    border: 1px solid #238636;
+    margin-top: 12px;
+    color: #3fb950;
+  }
+  .session-badge {
+    margin-top: 14px;
+    font-size: 11px;
+    color: #58a6ff;
+    word-break: break-all;
+  }
+  .alert {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .alert-success { background: #1a3a2a; color: #3fb950; border: 1px solid #238636; }
+  .alert-error { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
+  .alert-info { background: #1a2a3a; color: #58a6ff; border: 1px solid #1f6feb; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #30363d;
+    border-top-color: #238636;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-  <img src="/assets/botlogo.jpg" alt="SwiftBot" style="width:140px;height:140px;border-radius:20px;margin-bottom:10px;">
-  <h1>SwiftBot</h1>
-  <p>Connect your WhatsApp account</p>
 
-  <div class="card">
-    <div class="tabs">
-      <div class="tab active" id="tabQr" onclick="showTab('qr')">QR Code</div>
-      <div class="tab" id="tabCode" onclick="showTab('code')">Pair Code</div>
-    </div>
+<img src="/assets/botlogo.jpg" alt="SwiftBot" class="logo" onerror="this.style.display='none'">
+<h1>SwiftBot</h1>
+<p class="subtitle">Connect your WhatsApp account</p>
 
-    <div id="qrSection">
-      <div id="qrcode">Starting session...</div>
-      <p class="status">Scan with WhatsApp &gt; Linked Devices</p>
-    </div>
-
-    <div id="codeSection" class="hidden">
-      <input type="text" id="phoneInput" placeholder="Enter number with country code, e.g. 254712345678">
-      <button onclick="requestCode()">Get Pair Code</button>
-      <div id="codeResult"></div>
-    </div>
-
-    <p class="session-id" id="sessionIdDisplay"></p>
-    <button onclick="startNewSession()" style="margin-top:15px;background:#21262d;">Pair Another Device</button>
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('qr', this)">QR Code</button>
+    <button class="tab" onclick="switchTab('code', this)">Pair Code</button>
   </div>
 
-<script>
-let sessionId = localStorage.getItem('swiftbot_session_id');
+  <!-- QR Section -->
+  <div id="tab-qr" class="section active">
+    <div id="qrBox">
+      <div class="spinner"></div>
+      <p class="status-text" id="qrStatus">Starting session...</p>
+    </div>
+  </div>
 
-function showTab(tab) {
-  document.getElementById('tabQr').classList.toggle('active', tab === 'qr');
-  document.getElementById('tabCode').classList.toggle('active', tab === 'code');
-  document.getElementById('qrSection').classList.toggle('hidden', tab !== 'qr');
-  document.getElementById('codeSection').classList.toggle('hidden', tab !== 'code');
+  <!-- Pair Code Section -->
+  <div id="tab-code" class="section">
+    <div class="input-group">
+      <input type="text" id="phoneInput" placeholder="Number with country code e.g. 254712345678">
+      <button class="btn btn-green" onclick="requestCode()">Get Pair Code</button>
+      <div id="codeResult"></div>
+    </div>
+  </div>
+
+  <p class="session-badge" id="sessionBadge"></p>
+  <button class="btn btn-gray" onclick="newSession()">Pair Another Device</button>
+</div>
+
+<script>
+const STORAGE_KEY = 'swiftbot_sid';
+let sessionId = localStorage.getItem(STORAGE_KEY);
+let qrInterval = null;
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setQrStatus(html) {
+  document.getElementById('qrStatus').innerHTML = html;
+}
+
+function showQr(dataUrl) {
+  document.getElementById('qrBox').innerHTML = '<img src="' + dataUrl + '" alt="QR Code"><p class="status-text">Scan with WhatsApp → Linked Devices → Link a Device</p>';
+}
+
+function showConnected() {
+  document.getElementById('qrBox').innerHTML = '<div class="alert alert-success">✅ Connected! Your bot is now active.</div>';
+  clearInterval(qrInterval);
 }
 
 async function initSession() {
   try {
-    const url = sessionId ? '/api/session/init?sessionId=' + encodeURIComponent(sessionId) : '/api/session/init';
+    const url = sessionId
+      ? '/api/session/init?sessionId=' + encodeURIComponent(sessionId)
+      : '/api/session/init';
+
     const res = await fetch(url, { method: 'POST' });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
     const data = await res.json();
 
     if (data.error) {
-      document.getElementById('qrcode').innerHTML = '<p>' + data.error + '</p>';
+      document.getElementById('qrBox').innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
       return;
     }
 
     sessionId = data.sessionId;
-    localStorage.setItem('swiftbot_session_id', sessionId);
-    document.getElementById('sessionIdDisplay').textContent = 'Session ID: ' + sessionId;
+    localStorage.setItem(STORAGE_KEY, sessionId);
+    document.getElementById('sessionBadge').textContent = 'Session: ' + sessionId;
 
-    loadQr();
-  } catch (e) {
-    document.getElementById('qrcode').innerHTML = '<p>Failed to start session. Refresh to try again.</p>';
+    startQrPolling();
+  } catch (err) {
+    document.getElementById('qrBox').innerHTML = '<div class="alert alert-error">❌ Failed to start session: ' + err.message + '<br><br>Refresh to try again.</div>';
   }
 }
 
-async function loadQr() {
+function startQrPolling() {
+  pollQr();
+  clearInterval(qrInterval);
+  qrInterval = setInterval(pollQr, 4000);
+}
+
+async function pollQr() {
   try {
     const res = await fetch('/api/qr?sessionId=' + encodeURIComponent(sessionId));
+    if (!res.ok) throw new Error('Status ' + res.status);
     const data = await res.json();
-    if (data.qr) {
-      document.getElementById('qrcode').innerHTML = '<img src="' + data.qr + '" alt="QR Code">';
-      setTimeout(loadQr, 5000);
-    } else if (data.connected) {
-      document.getElementById('qrcode').innerHTML = '<p>Connected! Your bot is now active.</p>';
+
+    if (data.connected) {
+      showConnected();
+    } else if (data.qr) {
+      showQr(data.qr);
     } else {
-      document.getElementById('qrcode').innerHTML = '<p>Waiting for QR code...</p>';
-      setTimeout(loadQr, 3000);
+      setQrStatus('Waiting for QR code...');
     }
-  } catch (e) {
-    document.getElementById('qrcode').innerHTML = '<p>Error loading QR. Retrying...</p>';
-    setTimeout(loadQr, 3000);
+  } catch (err) {
+    setQrStatus('Connection error. Retrying...');
   }
 }
 
 async function requestCode() {
-  const phone = document.getElementById('phoneInput').value.trim();
+  const phone = document.getElementById('phoneInput').value.replace(/\D/g, '');
   const resultEl = document.getElementById('codeResult');
-  if (!phone) {
-    resultEl.innerHTML = '<p class="status">Please enter a valid number.</p>';
+
+  if (!phone || phone.length < 7) {
+    resultEl.innerHTML = '<div class="alert alert-error">Enter a valid number with country code.</div>';
     return;
   }
-  resultEl.innerHTML = '<p class="status">Requesting code...</p>';
+
+  if (!sessionId) {
+    resultEl.innerHTML = '<div class="alert alert-error">No active session. Go to QR tab first.</div>';
+    return;
+  }
+
+  resultEl.innerHTML = '<div class="alert alert-info">⏳ Requesting code...</div>';
+
   try {
-    const res = await fetch('/api/pair?sessionId=' + encodeURIComponent(sessionId) + '&number=' + encodeURIComponent(phone));
+    const res = await fetch('/api/pair?sessionId=' + encodeURIComponent(sessionId) + '&number=' + phone);
+    if (!res.ok) throw new Error('Server error: ' + res.status);
     const data = await res.json();
+
     if (data.code) {
-      resultEl.innerHTML = '<div class="code-display">' + data.code + '</div><p class="status">Enter this code in WhatsApp &gt; Linked Devices &gt; Link with phone number</p>';
+      resultEl.innerHTML =
+        '<div class="pair-code">' + data.code + '</div>' +
+        '<p class="status-text" style="margin-top:10px">Enter this in WhatsApp → Linked Devices → Link with phone number</p>';
     } else {
-      resultEl.innerHTML = '<p class="status">' + (data.error || 'Failed to get code. Try again.') + '</p>';
+      resultEl.innerHTML = '<div class="alert alert-error">❌ ' + (data.error || 'Failed to get code.') + '</div>';
     }
-  } catch (e) {
-    resultEl.innerHTML = '<p class="status">Error requesting code. Try again.</p>';
+  } catch (err) {
+    resultEl.innerHTML = '<div class="alert alert-error">❌ ' + err.message + '</div>';
   }
 }
 
-initSession();
-
-function startNewSession() {
-  localStorage.removeItem('swiftbot_session_id');
+function newSession() {
+  clearInterval(qrInterval);
+  localStorage.removeItem(STORAGE_KEY);
   sessionId = null;
+  document.getElementById('qrBox').innerHTML = '<div class="spinner"></div><p class="status-text" id="qrStatus">Starting new session...</p>';
   document.getElementById('codeResult').innerHTML = '';
-  document.getElementById('sessionIdDisplay').textContent = '';
-  document.getElementById('qrcode').innerHTML = 'Starting new session...';
+  document.getElementById('sessionBadge').textContent = '';
   initSession();
 }
+
+// Boot
+initSession();
 </script>
 </body>
 </html>
