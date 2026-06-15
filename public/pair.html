@@ -6,6 +6,33 @@
 <title>SwiftBot Pairing</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Rotating circle light in background */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    width: 500px; height: 500px;
+    top: -150px; left: -150px;
+    background: conic-gradient(from 0deg, #238636, #3fb950, #ffffff22, #238636);
+    animation: rotateCone 8s linear infinite;
+    opacity: 0.12;
+    filter: blur(40px);
+  }
+  body::after {
+    width: 400px; height: 400px;
+    bottom: -120px; right: -120px;
+    background: conic-gradient(from 180deg, #ffffff22, #3fb950, #238636, #ffffff22);
+    animation: rotateCone 12s linear infinite reverse;
+    opacity: 0.10;
+    filter: blur(50px);
+  }
+  @keyframes rotateCone { to { transform: rotate(360deg); } }
+
   body {
     font-family: Arial, sans-serif;
     background: #0d1117;
@@ -17,7 +44,9 @@
     justify-content: center;
     padding: 20px;
     text-align: center;
+    position: relative;
   }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
   .logo {
     width: 120px;
     height: 120px;
@@ -84,17 +113,35 @@
   .btn-green:hover { background: #2ea043; }
   .btn-gray { background: #21262d; color: #f0f6fc; margin-top: 14px; }
   .btn-gray:hover { background: #30363d; }
+  .pair-code-wrap {
+    margin-top: 12px;
+    position: relative;
+  }
   .pair-code {
     font-size: 32px;
     font-weight: bold;
     letter-spacing: 6px;
-    padding: 14px;
+    padding: 14px 14px 14px 14px;
     background: #0d1117;
     border-radius: 8px;
     border: 1px solid #238636;
-    margin-top: 12px;
     color: #3fb950;
   }
+  .copy-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #238636;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: #2ea043; }
+  .copy-btn.copied { background: #1a3a2a; color: #3fb950; border: 1px solid #238636; }
   .session-badge {
     margin-top: 14px;
     font-size: 11px;
@@ -122,6 +169,7 @@
 </head>
 <body>
 
+<div class="content">
 <img src="/assets/botlogo.jpg" alt="SwiftBot" class="logo" onerror="this.style.display='none'">
 <h1>SwiftBot</h1>
 <p class="subtitle">Connect your WhatsApp account</p>
@@ -151,6 +199,7 @@
 
   <p class="session-badge" id="sessionBadge"></p>
   <button class="btn btn-gray" onclick="newSession()">Pair Another Device</button>
+</div>
 </div>
 
 <script>
@@ -249,8 +298,12 @@ async function requestCode() {
     const data = await res.json();
 
     if (data.code) {
+      const code = data.code;
       resultEl.innerHTML =
-        '<div class="pair-code">' + data.code + '</div>' +
+        '<div class="pair-code-wrap">' +
+          '<div class="pair-code" id="pairCodeText">' + code + '</div>' +
+          '<button class="copy-btn" id="copyBtn" onclick="copyCode(\'' + code + '\')">📋 Copy Code</button>' +
+        '</div>' +
         '<p class="status-text" style="margin-top:10px">Enter this in WhatsApp → Linked Devices → Link with phone number</p>';
     } else {
       resultEl.innerHTML = '<div class="alert alert-error">❌ ' + (data.error || 'Failed to get code.') + '</div>';
@@ -268,6 +321,30 @@ function newSession() {
   document.getElementById('codeResult').innerHTML = '';
   document.getElementById('sessionBadge').textContent = '';
   initSession();
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) {
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Code';
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+  }).catch(() => {
+    // Fallback for browsers without clipboard API
+    const el = document.createElement('textarea');
+    el.value = code;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    const btn = document.getElementById('copyBtn');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy Code'; }, 2000); }
+  });
 }
 
 // Boot
