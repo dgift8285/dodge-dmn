@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwiftBot Pairing</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0d1117;
+    color: #f0f6fc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+  }
+  h1 { margin-bottom: 5px; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  #qrcode img { max-width: 100%; border-radius: 8px; }
+  input, button {
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  input { background: #0d1117; color: #f0f6fc; }
+  button {
+    background: #238636;
+    color: white;
+    cursor: pointer;
+    border: none;
+  }
+  button:hover { background: #2ea043; }
+  .code-display {
+    font-size: 28px;
+    letter-spacing: 4px;
+    font-weight: bold;
+    margin-top: 15px;
+    padding: 12px;
+    background: #0d1117;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+  }
+  .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    background: #21262d;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .tab.active { background: #238636; }
+  .status { margin-top: 10px; font-size: 14px; color: #8b949e; }
+  .session-id { font-size: 13px; color: #58a6ff; margin-top: 8px; word-break: break-all; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <h1>SwiftBot</h1>
+  <p>Connect your WhatsApp account</p>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" id="tabQr" onclick="showTab('qr')">QR Code</div>
+      <div class="tab" id="tabCode" onclick="showTab('code')">Pair Code</div>
+    </div>
+
+    <div id="qrSection">
+      <div id="qrcode">Starting session...</div>
+      <p class="status">Scan with WhatsApp &gt; Linked Devices</p>
+    </div>
+
+    <div id="codeSection" class="hidden">
+      <input type="text" id="phoneInput" placeholder="Enter number with country code, e.g. 254712345678">
+      <button onclick="requestCode()">Get Pair Code</button>
+      <div id="codeResult"></div>
+    </div>
+
+    <p class="session-id" id="sessionIdDisplay"></p>
+  </div>
+
+<script>
+let sessionId = localStorage.getItem('swiftbot_session_id');
+
+function showTab(tab) {
+  document.getElementById('tabQr').classList.toggle('active', tab === 'qr');
+  document.getElementById('tabCode').classList.toggle('active', tab === 'code');
+  document.getElementById('qrSection').classList.toggle('hidden', tab !== 'qr');
+  document.getElementById('codeSection').classList.toggle('hidden', tab !== 'code');
+}
+
+async function initSession() {
+  try {
+    const url = sessionId ? '/api/session/init?sessionId=' + encodeURIComponent(sessionId) : '/api/session/init';
+    const res = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('qrcode').innerHTML = '<p>' + data.error + '</p>';
+      return;
+    }
+
+    sessionId = data.sessionId;
+    localStorage.setItem('swiftbot_session_id', sessionId);
+    document.getElementById('sessionIdDisplay').textContent = 'Session ID: ' + sessionId;
+
+    loadQr();
+  } catch (e) {
+    document.getElementById('qrcode').innerHTML = '<p>Failed to start session. Refresh to try again.</p>';
+  }
+}
+
+async function loadQr() {
+  try {
+    const res = await fetch('/api/qr?sessionId=' + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if (data.qr) {
+      document.getElementById('qrcode').innerHTML = '<img src="' + data.qr + '" alt="QR Code">';
+      setTimeout(loadQr, 5000);
+    } else if (data.connected) {
+      document.getElementById('qrcode').innerHTML = '<p>Connected! Your bot is now active.</p>';
+    } else {
+      document.getElementById('qrcode').innerHTML = '<p>Waiting for QR code...</p>';
+      setTimeout(loadQr, 3000);
+    }
+  } catch (e) {
+    document.getElementById('qrcode').innerHTML = '<p>Error loading QR. Retrying...</p>';
+    setTimeout(loadQr, 3000);
+  }
+}
+
+async function requestCode() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  const resultEl = document.getElementById('codeResult');
+  if (!phone) {
+    resultEl.innerHTML = '<p class="status">Please enter a valid number.</p>';
+    return;
+  }
+  resultEl.innerHTML = '<p class="status">Requesting code...</p>';
+  try {
+    const res = await fetch('/api/pair?sessionId=' + encodeURIComponent(sessionId) + '&number=' + encodeURIComponent(phone));
+    const data = await res.json();
+    if (data.code) {
+      resultEl.innerHTML = '<div class="code-display">' + data.code + '</div><p class="status">Enter this code in WhatsApp &gt; Linked Devices &gt; Link with phone number</p>';
+    } else {
+      resultEl.innerHTML = '<p class="status">' + (data.error || 'Failed to get code. Try again.') + '</p>';
+    }
+  } catch (e) {
+    resultEl.innerHTML = '<p class="status">Error requesting code. Try again.</p>';
+  }
+}
+
+initSession();
+</script>
+</body>
+</html>
