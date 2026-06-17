@@ -79,26 +79,33 @@ app.get('/api/qr', async (req, res) => {
 });
 
 app.get('/api/pair', async (req, res) => {
-  const sessionId = req.query.sessionId;
   const number = (req.query.number || '').replace(/[^0-9]/g, '');
 
-  if (!sessionId) return res.json({ error: 'Missing sessionId' });
   if (!number) return res.json({ error: 'Invalid number' });
 
-  const entry = getSession(sessionId);
-  if (!entry || !entry.sock) return res.json({ error: 'Session not initialized yet, try again shortly' });
+  if (!canCreateSession()) {
+    return res.json({ error: 'Server is at capacity. Please try again later.' });
+  }
 
   try {
-    // Baileys requires registration=false for pair codes
-    // Force it if not already set
-    if (entry.sock.authState?.creds?.registered) {
-      return res.json({ error: 'This session is already registered. Click "Pair Another Device" to start fresh.' });
+    // Always start a brand new clean session for pair code
+    const sessionId = generateSessionId();
+    const entry = await startSession(sessionId, { restore: false, pairingNumber: number });
+
+    // Wait up to 15 seconds for the pairing code to be generated
+    let waited = 0;
+    while (!entry.pairingCode && waited < 15000) {
+      await new Promise(r => setTimeout(r, 500));
+      waited += 500;
     }
 
-    const code = await entry.sock.requestPairingCode(number);
-    return res.json({ code });
+    if (!entry.pairingCode) {
+      return res.json({ error: 'Timed out waiting for pair code. Try again.' });
+    }
+
+    return res.json({ code: entry.pairingCode, sessionId });
   } catch (err) {
-    console.error(`[${sessionId}] Pairing code error:`, err.message);
+    console.error('Pair code error:', err.message);
     return res.json({ error: 'Failed to get pairing code: ' + err.message });
   }
 });
