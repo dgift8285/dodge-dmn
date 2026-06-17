@@ -89,6 +89,12 @@ app.get('/api/pair', async (req, res) => {
   if (!entry || !entry.sock) return res.json({ error: 'Session not initialized yet, try again shortly' });
 
   try {
+    // Baileys requires registration=false for pair codes
+    // Force it if not already set
+    if (entry.sock.authState?.creds?.registered) {
+      return res.json({ error: 'This session is already registered. Click "Pair Another Device" to start fresh.' });
+    }
+
     const code = await entry.sock.requestPairingCode(number);
     return res.json({ code });
   } catch (err) {
