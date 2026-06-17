@@ -7,174 +7,234 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* Rotating circle light in background */
-  body::before, body::after {
-    content: '';
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-  }
-  body::before {
-    width: 500px; height: 500px;
-    top: -150px; left: -150px;
-    background: conic-gradient(from 0deg, #238636, #3fb950, #ffffff22, #238636);
-    animation: rotateCone 8s linear infinite;
-    opacity: 0.12;
-    filter: blur(40px);
-  }
-  body::after {
-    width: 400px; height: 400px;
-    bottom: -120px; right: -120px;
-    background: conic-gradient(from 180deg, #ffffff22, #3fb950, #238636, #ffffff22);
-    animation: rotateCone 12s linear infinite reverse;
-    opacity: 0.10;
-    filter: blur(50px);
-  }
-  @keyframes rotateCone { to { transform: rotate(360deg); } }
-
   body {
     font-family: Arial, sans-serif;
-    background: #0d1117;
-    color: #f0f6fc;
+    background: #000;
+    color: #fff;
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
     text-align: center;
-    position: relative;
   }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
-  .logo {
-    width: 120px;
-    height: 120px;
-    border-radius: 20px;
-    margin-bottom: 12px;
-    object-fit: cover;
-  }
-  h1 { font-size: 28px; margin-bottom: 4px; }
-  p.subtitle { color: #8b949e; margin-bottom: 20px; font-size: 14px; }
+
   .card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 14px;
-    padding: 24px;
+    background: #111;
+    border-radius: 16px;
+    padding: 32px 24px;
     width: 100%;
-    max-width: 380px;
+    max-width: 360px;
+    box-shadow: 0 0 40px rgba(255,165,0,0.15);
   }
-  .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
-  .tab {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    background: #21262d;
-    color: #f0f6fc;
-    cursor: pointer;
-    border: none;
-    font-size: 14px;
+
+  .logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 2px solid #ff8c00;
+    box-shadow: 0 0 15px #ff8c00;
+  }
+
+  h1 {
+    font-size: 26px;
     font-weight: bold;
+    color: #ff8c00;
+    text-shadow: 0 0 10px #ff8c00, 0 0 20px #ff4500;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
   }
-  .tab.active { background: #238636; }
-  .section { display: none; }
-  .section.active { display: block; }
-  #qrBox {
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #ff8c00;
+    margin-bottom: 6px;
+    text-transform: uppercase;
   }
-  #qrBox img { width: 200px; height: 200px; border-radius: 8px; }
-  .status-text { color: #8b949e; font-size: 13px; margin-top: 8px; }
-  .input-group { display: flex; flex-direction: column; gap: 10px; }
-  input[type="text"] {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #30363d;
-    background: #0d1117;
-    color: #f0f6fc;
-    font-size: 15px;
+
+  .made-by {
+    font-size: 10px;
+    color: #ff8c00;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    opacity: 0.7;
+  }
+
+  /* Rainbow glow animation */
+  @keyframes rainbow {
+    0%   { border-color: #ff0000; box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+    16%  { border-color: #ff8800; box-shadow: 0 0 10px #ff8800, 0 0 20px #ff8800; }
+    33%  { border-color: #ffff00; box-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00; }
+    50%  { border-color: #00ff00; box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
+    66%  { border-color: #0088ff; box-shadow: 0 0 10px #0088ff, 0 0 20px #0088ff; }
+    83%  { border-color: #8800ff; box-shadow: 0 0 10px #8800ff, 0 0 20px #8800ff; }
+    100% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+  }
+
+  .glow-input {
     width: 100%;
-  }
-  input[type="text"]:focus { outline: none; border-color: #238636; }
-  .btn {
-    padding: 10px;
+    padding: 13px;
     border-radius: 8px;
-    border: none;
+    border: 2px solid #ff0000;
+    background: #000;
+    color: #fff;
+    font-size: 15px;
+    text-align: center;
+    outline: none;
+    animation: rainbow 3s linear infinite;
+    margin-bottom: 12px;
+  }
+
+  .glow-input::placeholder { color: #888; }
+
+  .glow-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: 2px solid #ff0000;
+    background: #000;
+    color: #fff;
     font-size: 15px;
     font-weight: bold;
+    letter-spacing: 1px;
     cursor: pointer;
+    animation: rainbow 3s linear infinite;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .glow-btn:active { opacity: 0.8; }
+
+  .code-display {
     width: 100%;
-  }
-  .btn-green { background: #238636; color: white; }
-  .btn-green:hover { background: #2ea043; }
-  .btn-gray { background: #21262d; color: #f0f6fc; margin-top: 14px; }
-  .btn-gray:hover { background: #30363d; }
-  .pair-code-wrap {
-    margin-top: 12px;
-    position: relative;
-  }
-  .pair-code {
-    font-size: 32px;
+    padding: 13px;
+    border-radius: 8px;
+    border: 2px solid #ff0000;
+    background: #000;
+    color: #fff;
+    font-size: 22px;
     font-weight: bold;
     letter-spacing: 6px;
-    padding: 14px 14px 14px 14px;
-    background: #0d1117;
-    border-radius: 8px;
-    border: 1px solid #238636;
-    color: #3fb950;
+    text-align: center;
+    animation: rainbow 3s linear infinite;
+    margin-bottom: 12px;
   }
+
   .copy-btn {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #238636;
-    color: white;
-    border: none;
+    width: 100%;
+    padding: 10px;
     border-radius: 8px;
+    border: 1px solid #ff8c00;
+    background: #000;
+    color: #ff8c00;
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    width: 100%;
-    transition: background 0.2s;
+    margin-bottom: 12px;
+    transition: all 0.2s;
   }
-  .copy-btn:hover { background: #2ea043; }
-  .copy-btn.copied { background: #1a3a2a; color: #3fb950; border: 1px solid #238636; }
-  .session-badge {
-    margin-top: 14px;
-    font-size: 11px;
-    color: #58a6ff;
-    word-break: break-all;
+
+  .copy-btn.copied { color: #00ff00; border-color: #00ff00; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
   }
-  .alert {
-    padding: 10px 12px;
+
+  .tab {
+    flex: 1;
+    padding: 8px;
     border-radius: 8px;
+    border: 1px solid #ff8c00;
+    background: #000;
+    color: #888;
     font-size: 13px;
-    margin-top: 10px;
+    cursor: pointer;
   }
-  .alert-success { background: #1a3a2a; color: #3fb950; border: 1px solid #238636; }
-  .alert-error { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
-  .alert-info { background: #1a2a3a; color: #58a6ff; border: 1px solid #1f6feb; }
+
+  .tab.active {
+    color: #ff8c00;
+    border-color: #ff8c00;
+    box-shadow: 0 0 8px #ff8c00;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  #qrBox {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  #qrBox img {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+    border: 2px solid #ff8c00;
+    box-shadow: 0 0 15px #ff8c00;
+  }
+
+  .status-text {
+    font-size: 12px;
+    color: #888;
+    letter-spacing: 1px;
+  }
+
+  .alert {
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .alert-success { color: #00ff00; border: 1px solid #00ff00; }
+  .alert-error { color: #ff4444; border: 1px solid #ff4444; }
+  .alert-info { color: #ff8c00; border: 1px solid #ff8c00; }
+
   .spinner {
     width: 36px; height: 36px;
-    border: 3px solid #30363d;
-    border-top-color: #238636;
+    border: 3px solid #333;
+    border-top-color: #ff8c00;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
+
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .session-badge {
+    font-size: 10px;
+    color: #555;
+    margin-top: 10px;
+    word-break: break-all;
+  }
+
+  .footer {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #ff8c00;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
-
-<div class="content">
-<img src="/assets/botlogo.jpg" alt="SwiftBot" class="logo" onerror="this.style.display='none'">
-<h1>SwiftBot</h1>
-<p class="subtitle">Connect your WhatsApp account</p>
-
 <div class="card">
+
+  <img src="/assets/botlogo.jpg" alt="SwiftBot" class="logo" onerror="this.style.display='none'">
+  <h1>⚡ SWIFTBOT ⚡</h1>
+  <p class="subtitle">Pair Code</p>
+  <p class="made-by">Smart. Fast. Always Here.</p>
+
   <div class="tabs">
     <button class="tab active" onclick="switchTab('qr', this)">QR Code</button>
     <button class="tab" onclick="switchTab('code', this)">Pair Code</button>
@@ -184,22 +244,26 @@
   <div id="tab-qr" class="section active">
     <div id="qrBox">
       <div class="spinner"></div>
-      <p class="status-text" id="qrStatus">Starting session...</p>
+      <p class="status-text" id="qrStatus">STARTING SESSION...</p>
     </div>
   </div>
 
   <!-- Pair Code Section -->
   <div id="tab-code" class="section">
-    <div class="input-group">
-      <input type="text" id="phoneInput" placeholder="Number with country code e.g. 254712345678">
-      <button class="btn btn-green" onclick="requestCode()">Get Pair Code</button>
-      <div id="codeResult"></div>
-    </div>
+    <input class="glow-input" type="text" id="phoneInput" placeholder="TYPE YOUR WHATSAPP NUMBER">
+    <button class="glow-btn" onclick="requestCode()">GET PAIR CODE</button>
+    <div id="codeResult"></div>
   </div>
 
   <p class="session-badge" id="sessionBadge"></p>
-  <button class="btn btn-gray" onclick="newSession()">Pair Another Device</button>
-</div>
+  <button class="glow-btn" onclick="newSession()" style="margin-top:8px;font-size:12px;padding:10px;">PAIR ANOTHER DEVICE</button>
+
+  <div class="footer">
+    WHATSAPP BOT<br>
+    MADE BY SWIFTBOT TEC<br>
+    SWIFTBOT EDITION 2026
+  </div>
+
 </div>
 
 <script>
@@ -214,16 +278,20 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 
-function setQrStatus(html) {
-  document.getElementById('qrStatus').innerHTML = html;
+function setQrStatus(text) {
+  const el = document.getElementById('qrStatus');
+  if (el) el.textContent = text;
 }
 
 function showQr(dataUrl) {
-  document.getElementById('qrBox').innerHTML = '<img src="' + dataUrl + '" alt="QR Code"><p class="status-text">Scan with WhatsApp → Linked Devices → Link a Device</p>';
+  document.getElementById('qrBox').innerHTML =
+    '<img src="' + dataUrl + '" alt="QR Code">' +
+    '<p class="status-text">SCAN WITH WHATSAPP → LINKED DEVICES</p>';
 }
 
 function showConnected() {
-  document.getElementById('qrBox').innerHTML = '<div class="alert alert-success">✅ Connected! Your bot is now active.</div>';
+  document.getElementById('qrBox').innerHTML =
+    '<div class="alert alert-success">✅ CONNECTED! YOUR BOT IS NOW ACTIVE.</div>';
   clearInterval(qrInterval);
 }
 
@@ -232,23 +300,22 @@ async function initSession() {
     const url = sessionId
       ? '/api/session/init?sessionId=' + encodeURIComponent(sessionId)
       : '/api/session/init';
-
     const res = await fetch(url, { method: 'POST' });
-    if (!res.ok) throw new Error('Server error: ' + res.status);
     const data = await res.json();
 
     if (data.error) {
-      document.getElementById('qrBox').innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+      document.getElementById('qrBox').innerHTML =
+        '<div class="alert alert-error">❌ ' + data.error + '</div>';
       return;
     }
 
     sessionId = data.sessionId;
     localStorage.setItem(STORAGE_KEY, sessionId);
-    document.getElementById('sessionBadge').textContent = 'Session: ' + sessionId;
-
+    document.getElementById('sessionBadge').textContent = 'SESSION: ' + sessionId;
     startQrPolling();
   } catch (err) {
-    document.getElementById('qrBox').innerHTML = '<div class="alert alert-error">❌ Failed to start session: ' + err.message + '<br><br>Refresh to try again.</div>';
+    document.getElementById('qrBox').innerHTML =
+      '<div class="alert alert-error">❌ FAILED TO START: ' + err.message + '</div>';
   }
 }
 
@@ -261,18 +328,17 @@ function startQrPolling() {
 async function pollQr() {
   try {
     const res = await fetch('/api/qr?sessionId=' + encodeURIComponent(sessionId));
-    if (!res.ok) throw new Error('Status ' + res.status);
     const data = await res.json();
-
     if (data.connected) {
       showConnected();
     } else if (data.qr) {
       showQr(data.qr);
     } else {
-      setQrStatus('Waiting for QR code...');
+      document.getElementById('qrBox').innerHTML =
+        '<div class="spinner"></div><p class="status-text" id="qrStatus">WAITING FOR QR CODE...</p>';
     }
-  } catch (err) {
-    setQrStatus('Connection error. Retrying...');
+  } catch {
+    setQrStatus('CONNECTION ERROR. RETRYING...');
   }
 }
 
@@ -281,61 +347,45 @@ async function requestCode() {
   const resultEl = document.getElementById('codeResult');
 
   if (!phone || phone.length < 7) {
-    resultEl.innerHTML = '<div class="alert alert-error">Enter a valid number with country code.</div>';
+    resultEl.innerHTML = '<div class="alert alert-error">ENTER A VALID NUMBER WITH COUNTRY CODE</div>';
     return;
   }
-
   if (!sessionId) {
-    resultEl.innerHTML = '<div class="alert alert-error">No active session. Go to QR tab first.</div>';
+    resultEl.innerHTML = '<div class="alert alert-error">GO TO QR TAB FIRST TO START A SESSION</div>';
     return;
   }
 
-  resultEl.innerHTML = '<div class="alert alert-info">⏳ Requesting code...</div>';
+  resultEl.innerHTML = '<div class="alert alert-info">⏳ REQUESTING CODE...</div>';
 
   try {
     const res = await fetch('/api/pair?sessionId=' + encodeURIComponent(sessionId) + '&number=' + phone);
-    if (!res.ok) throw new Error('Server error: ' + res.status);
     const data = await res.json();
 
     if (data.code) {
-      const code = data.code;
       resultEl.innerHTML =
-        '<div class="pair-code-wrap">' +
-          '<div class="pair-code" id="pairCodeText">' + code + '</div>' +
-          '<button class="copy-btn" id="copyBtn" onclick="copyCode(\'' + code + '\')">📋 Copy Code</button>' +
-        '</div>' +
-        '<p class="status-text" style="margin-top:10px">Enter this in WhatsApp → Linked Devices → Link with phone number</p>';
+        '<div class="code-display" id="pairCodeText">' + data.code + '</div>' +
+        '<button class="copy-btn" id="copyBtn" onclick="copyCode(\'' + data.code + '\')">📋 COPY CODE</button>' +
+        '<p class="status-text">ENTER IN WHATSAPP → LINKED DEVICES → LINK WITH PHONE NUMBER</p>';
     } else {
-      resultEl.innerHTML = '<div class="alert alert-error">❌ ' + (data.error || 'Failed to get code.') + '</div>';
+      resultEl.innerHTML = '<div class="alert alert-error">❌ ' + (data.error || 'FAILED TO GET CODE') + '</div>';
     }
   } catch (err) {
     resultEl.innerHTML = '<div class="alert alert-error">❌ ' + err.message + '</div>';
   }
 }
 
-function newSession() {
-  clearInterval(qrInterval);
-  localStorage.removeItem(STORAGE_KEY);
-  sessionId = null;
-  document.getElementById('qrBox').innerHTML = '<div class="spinner"></div><p class="status-text" id="qrStatus">Starting new session...</p>';
-  document.getElementById('codeResult').innerHTML = '';
-  document.getElementById('sessionBadge').textContent = '';
-  initSession();
-}
-
 function copyCode(code) {
   navigator.clipboard.writeText(code).then(() => {
     const btn = document.getElementById('copyBtn');
     if (btn) {
-      btn.textContent = '✅ Copied!';
+      btn.textContent = '✅ COPIED!';
       btn.classList.add('copied');
       setTimeout(() => {
-        btn.textContent = '📋 Copy Code';
+        btn.textContent = '📋 COPY CODE';
         btn.classList.remove('copied');
       }, 2000);
     }
   }).catch(() => {
-    // Fallback for browsers without clipboard API
     const el = document.createElement('textarea');
     el.value = code;
     document.body.appendChild(el);
@@ -343,11 +393,21 @@ function copyCode(code) {
     document.execCommand('copy');
     document.body.removeChild(el);
     const btn = document.getElementById('copyBtn');
-    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy Code'; }, 2000); }
+    if (btn) { btn.textContent = '✅ COPIED!'; setTimeout(() => { btn.textContent = '📋 COPY CODE'; }, 2000); }
   });
 }
 
-// Boot
+function newSession() {
+  clearInterval(qrInterval);
+  localStorage.removeItem(STORAGE_KEY);
+  sessionId = null;
+  document.getElementById('qrBox').innerHTML =
+    '<div class="spinner"></div><p class="status-text" id="qrStatus">STARTING NEW SESSION...</p>';
+  document.getElementById('codeResult').innerHTML = '';
+  document.getElementById('sessionBadge').textContent = '';
+  initSession();
+}
+
 initSession();
 </script>
 </body>
