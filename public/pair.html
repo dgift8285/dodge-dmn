@@ -362,6 +362,11 @@ async function requestCode() {
     const data = await res.json();
 
     if (data.code) {
+      if (data.sessionId) {
+        sessionId = data.sessionId;
+        localStorage.setItem(STORAGE_KEY, sessionId);
+        document.getElementById('sessionBadge').textContent = 'SESSION: ' + sessionId;
+      }
       resultEl.innerHTML =
         '<div class="code-display" id="pairCodeText">' + data.code + '</div>' +
         '<button class="copy-btn" id="copyBtn" onclick="copyCode(\'' + data.code + '\')">📋 COPY CODE</button>' +
