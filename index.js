@@ -1,7 +1,7 @@
 import express from 'express';
 import qrcode from 'qrcode';
 import path from 'path';
-
+import axios from 'axios';
 import {
   startSession,
   getSession,
@@ -12,23 +12,23 @@ import {
   listActiveSessions
 } from './lib/sessionManager.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT        = process.env.PORT            || 3000;
+const GIFTED_KEY  = process.env.GIFTED_API_KEY  || 'gifted';
+const GIFTED_BASE = 'https://api.gifted.co.ke';
 
 const app = express();
 app.use(express.static('public'));
 app.use(express.json());
 
-// ---------- Routes ----------
+// ── Routes ────────────────────────────────────────────────────────
 
 app.get('/', (req, res) => {
   res.sendFile(path.resolve('public', 'pair.html'));
 });
 
-// Initialize (or resume) a session. If sessionId provided and exists, resume it.
-// Otherwise generate a new sessionId and start a fresh session.
+// Initialize (or resume) a session
 app.post('/api/session/init', async (req, res) => {
   let sessionId = req.query.sessionId || req.body?.sessionId;
-
   try {
     if (sessionId) {
       let entry = getSession(sessionId);
@@ -36,7 +36,6 @@ app.post('/api/session/init', async (req, res) => {
         if (!canCreateSession()) {
           return res.json({ error: 'Server is at capacity. Please try again later.' });
         }
-        // Try to resume from storage (in case it exists in Supabase)
         entry = await startSession(sessionId, { restore: true });
       }
       return res.json({ sessionId });
@@ -55,6 +54,7 @@ app.post('/api/session/init', async (req, res) => {
   }
 });
 
+// QR code endpoint
 app.get('/api/qr', async (req, res) => {
   const sessionId = req.query.sessionId;
   if (!sessionId) return res.json({ error: 'Missing sessionId' });
@@ -62,15 +62,13 @@ app.get('/api/qr', async (req, res) => {
   const entry = getSession(sessionId);
   if (!entry) return res.json({ error: 'Session not found' });
 
-  if (entry.connected) {
-    return res.json({ connected: true });
-  }
+  if (entry.connected) return res.json({ connected: true });
 
   if (entry.qr) {
     try {
       const qrImage = await qrcode.toDataURL(entry.qr);
       return res.json({ qr: qrImage });
-    } catch (err) {
+    } catch {
       return res.json({ error: 'Failed to generate QR image' });
     }
   }
@@ -78,9 +76,9 @@ app.get('/api/qr', async (req, res) => {
   return res.json({ qr: null });
 });
 
+// Pairing code endpoint
 app.get('/api/pair', async (req, res) => {
   const number = (req.query.number || '').replace(/[^0-9]/g, '');
-
   if (!number) return res.json({ error: 'Invalid number' });
 
   if (!canCreateSession()) {
@@ -88,11 +86,9 @@ app.get('/api/pair', async (req, res) => {
   }
 
   try {
-    // Always start a brand new clean session for pair code
     const sessionId = generateSessionId();
     const entry = await startSession(sessionId, { restore: false, pairingNumber: number });
 
-    // Wait up to 15 seconds for the pairing code to be generated
     let waited = 0;
     while (!entry.pairingCode && waited < 15000) {
       await new Promise(r => setTimeout(r, 500));
@@ -110,19 +106,57 @@ app.get('/api/pair', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
+// Health check — now includes Gifted API status
+app.get('/health', async (req, res) => {
+  let giftedStatus = 'unknown';
+  try {
+    const { data } = await axios.get(`${GIFTED_BASE}/api/ai/ai`, {
+      params: { apikey: GIFTED_KEY, q: 'ping' },
+      timeout: 8000,
+    });
+    giftedStatus = data?.result ? 'ok' : 'degraded';
+  } catch {
+    giftedStatus = 'unreachable';
+  }
+
   res.json({
     status: 'ok',
     activeSessions: activeCount(),
-    sessions: listActiveSessions()
+    sessions: listActiveSessions(),
+    gifted: {
+      status: giftedStatus,
+      key: GIFTED_KEY === 'gifted' ? 'test key (gifted)' : 'custom key',
+      base: GIFTED_BASE,
+    },
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+// Gifted API test endpoint — test any downloader from browser
+// Usage: /api/gifted/test?endpoint=/api/download/ytmp3&url=https://youtube.com/...
+app.get('/api/gifted/test', async (req, res) => {
+  const { endpoint, ...params } = req.query;
+  if (!endpoint) {
+    return res.json({ error: 'Missing ?endpoint= param. Example: /api/gifted/test?endpoint=/api/download/ytmp3&url=YOUTUBE_URL' });
+  }
+  try {
+    const { data } = await axios.get(`${GIFTED_BASE}${endpoint}`, {
+      params: { apikey: GIFTED_KEY, ...params },
+      timeout: 30000,
+    });
+    return res.json({ ok: true, result: data });
+  } catch (err) {
+    return res.json({ ok: false, error: err.message, response: err.response?.data });
+  }
 });
 
-// Self-ping to help keep the service awake (in addition to UptimeRobot)
+// ── Start server ──────────────────────────────────────────────────
+
+app.listen(PORT, () => {
+  console.log(`✅ SwiftBot server listening on port ${PORT}`);
+  console.log(`🔑 Gifted API key: ${GIFTED_KEY}`);
+});
+
+// Self-ping to keep Render service awake (alongside UptimeRobot)
 const SELF_URL = process.env.SELF_URL;
 if (SELF_URL) {
   setInterval(() => {
@@ -130,8 +164,7 @@ if (SELF_URL) {
   }, 5 * 60 * 1000);
 }
 
-// ---------- Restore previously connected sessions on boot ----------
-
+// Restore previously connected sessions on boot
 restoreAllSessions().catch((err) => {
   console.error('Failed to restore sessions:', err.message);
 });
